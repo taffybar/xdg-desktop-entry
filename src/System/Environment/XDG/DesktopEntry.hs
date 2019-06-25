@@ -23,10 +23,13 @@ module System.Environment.XDG.DesktopEntry
   , deNoDisplay
   , deNotShowIn
   , deOnlyShowIn
+  , getClassNames
   , getDirectoryEntriesDefault
   , getDirectoryEntry
   , getDirectoryEntryDefault
   , getXDGDataDirs
+  , indexDesktopEntriesBy
+  , indexDesktopEntriesByClassName
   , listDesktopEntries
   , readDesktopEntry
   ) where
