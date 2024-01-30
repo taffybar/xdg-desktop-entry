@@ -37,17 +37,19 @@ module System.Environment.XDG.DesktopEntry
 import           Control.Monad
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Except
+import           Data.Bifunctor (bimap)
 import           Data.Char
-import qualified Data.ConfigFile as CF
+import qualified Data.Ini as Ini
 import           Data.Either
 import           Data.Either.Combinators
+import qualified Data.HashMap.Strict as HM
 import qualified Data.MultiMap as MM
 import           Data.List
 import           Data.Maybe
+import           Data.Text (pack, unpack)
 import           Safe
 import           System.Directory
 import           System.FilePath.Posix
-import           System.Posix.Files
 import           Text.Printf
 import           Text.Read (readMaybe)
 
@@ -176,10 +178,14 @@ getDirectoryEntriesDefault =
           (soFar ++) <$> listDesktopEntries "desktop" directory
 
 -- | Read a desktop entry from a file.
-readDesktopEntry :: FilePath -> IO (Either (CF.CPErrorData, String) DesktopEntry)
+readDesktopEntry :: FilePath -> IO (Either String DesktopEntry)
 readDesktopEntry filePath = runExceptT $ do
-  result <- (join $ liftIO $ CF.readfile CF.emptyCP filePath) >>=
-            flip CF.items "Desktop Entry"
+  -- let foo1 = join . fmap except . liftIO $ Ini.readIniFile filePath
+  -- let bar :: ExceptT String IO (HM.HashMap Text [(Text, Text)]) = map Ini.iniSections . liftIO $ Ini.readIniFile filePath
+  -- sections <- fmap Ini.iniSections . join . fmap except . liftIO $ Ini.readIniFile filePath
+  sections <- liftIO (Ini.readIniFile filePath) >>= fmap Ini.iniSections . except
+  result <- maybe (throwE "Section [Desktop Entry] not found") (pure . fmap (bimap unpack unpack)) $
+              HM.lookup (pack "Desktop Entry") sections
   return DesktopEntry
          { deType = fromMaybe Application $ lookup "Type" result >>= readMaybe
          , deFilename = filePath
