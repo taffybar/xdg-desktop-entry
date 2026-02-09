@@ -118,9 +118,9 @@ deLocalisedAtt
 deLocalisedAtt langs de att =
   let localeMatches =
         mapMaybe (\l -> lookup (att ++ "[" ++ l ++ "]") (deAttributes de)) langs
-  in if null localeMatches
-       then lookup att $ deAttributes de
-       else Just $ head localeMatches
+  in case localeMatches of
+       [] -> lookup att $ deAttributes de
+       (x:_) -> Just x
 
 -- | Return the proper comment of the desktop entry, depending on the list of
 -- preferred languages.
